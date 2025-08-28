@@ -1,6 +1,7 @@
 package servlet14;
 
 import java.io.IOException;
+import java.util.Map;
 
 import dao2.AccountsDAO;
 import jakarta.servlet.RequestDispatcher;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model14.Account;
+import model14.UserLogic;
 
 @WebServlet("/UserServlet")
 public class UserServlet extends HttpServlet {
@@ -44,7 +46,16 @@ protected void doPost(HttpServletRequest request,
 		String name = request.getParameter("name");
 		String ageStr = request.getParameter("age");
 		
-		int age = Integer.parseInt(ageStr);
+		
+		int age = -1; // 未入力や不正値のときの初期値
+
+		if (ageStr != null && !ageStr.trim().isEmpty()) {
+		    try {
+		        age = Integer.parseInt(ageStr.trim());
+		    } catch (NumberFormatException e) {
+		        
+		    }
+		};
 		
 		
 		// ユーザー情報をAccountオブジェクトにまとめる
@@ -53,8 +64,29 @@ protected void doPost(HttpServletRequest request,
 	    // 登録処理の実行
 	    AccountsDAO dao = new AccountsDAO();
 	    Account registered = dao.registerAccount(accountInfo);
-	
-		//
+	    
+	    
+	    
+	    
+	    
+	    //未入力だった時のバリデーションチェック
+	    UserLogic logic = new UserLogic();
+	    Map<String, String> errors = logic.validate(accountInfo);
+	    
+	    
+	    
+	    if (!errors.isEmpty()) {
+	        request.setAttribute("errors", errors);
+	        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/user.jsp");
+	        dispatcher.forward(request, response);
+	        return;
+	    }
+
+	    
+	    //未入力だった時のバリデーションチェック↑
+	  
+
+	    //アカウントがったとき、つまりログインの時の処理
 		if(registered != null) {
 		    HttpSession session = request.getSession();
 		    session.setAttribute("userId", userId); // ← 修正済み
